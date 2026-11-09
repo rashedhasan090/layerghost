@@ -1,0 +1,19 @@
+examples/ctx/Dockerfile: 2 stage(s), final=runtime, 6 finding(s)
+  [HIGH  ] LG003 line 13 stage runtime  ENV SENTRY_AUTH_TOKEN
+           ENV SENTRY_AUTH_TOKEN bakes a credential into the final image config; a later ENV SENTRY_AUTH_TOKEN= or unset does not remove it from earlier layers' config history
+           fix: inject at runtime (docker run -e / orchestrator secret) or use a build secret mount
+  [HIGH  ] LG001 line 15 stage runtime  /app/.npmrc
+           COPY --from=builder (it was added to /src/.npmrc at line 9) puts /app/.npmrc in a layer at line 15; the RUN rm at line 16 only hides it, the bytes stay in the final image
+           fix: use RUN --mount=type=secret (or --mount=type=ssh) so the file never lands in a layer, or create, use, and delete it inside a single RUN
+  [HIGH  ] LG005 line 15 stage runtime  /app/.env
+           COPY --from=builder (it was added to /src/.env at line 9); it ships in the final image even though the builder stage was meant to stay behind
+           fix: copy only the build artifacts you need, or delete the secret inside the builder's RUN
+  [HIGH  ] LG005 line 15 stage runtime  /app/id_rsa
+           COPY --from=builder (it was added to /src/id_rsa at line 9); it ships in the final image even though the builder stage was meant to stay behind
+           fix: copy only the build artifacts you need, or delete the secret inside the builder's RUN
+  [LOW   ] LG002 line 6 stage builder  ARG NPM_TOKEN
+           build arg NPM_TOKEN is expanded in RUN at line 6; its value is recorded in the intermediate stage's build history (docker history shows it)
+           fix: pass it with RUN --mount=type=secret,id=npm_token and read /run/secrets/npm_token
+  [LOW   ] LG001 line 7 stage builder  /root/.ssh/id_rsa
+           COPY id_rsa puts /root/.ssh/id_rsa in a layer at line 7; the RUN rm at line 8 only hides it, the bytes stay in the intermediate stage
+           fix: use RUN --mount=type=secret (or --mount=type=ssh) so the file never lands in a layer, or create, use, and delete it inside a single RUN

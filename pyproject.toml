@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "layerghost"
+version = "0.1.0"
+description = "Find secrets a Dockerfile deletes but the image still ships (offline, stdlib Python)"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [{name = "Md Rashedul Hasan"}]
+
+[project.scripts]
+layerghost = "layerghost.cli:main"
+
+[tool.setuptools]
+packages = ["layerghost"]
